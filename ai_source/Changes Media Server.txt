@@ -1,0 +1,519 @@
+## Changes Media Server 3.3.1
+
+
+
+Added: API: The Media Server provides information about its zero-based instance number 0..3 (one-based 1..4 in the UI), so that DVBViewer clients are able to distinguish multiple instances running on the same PC with the same IP address. The number can be found in the
+
+description.xml for Sat>IP clients as <X_Instance> integer element, if (and only if) the instance number is greater than 0.
+
+/api/version.html web server output as additional inst integer attribute of the <version> element.
+
+## Changes Media Server 3.3.0
+Fix: API: Parts of the api/timerlist output (Title, Subheading, Series, Source) were not converted from Unicode (UTF-8) to the local ANSI character set, if the utf8 parameter was 0 or missing.
+
+## Changes Media Server 3.2.3
+
+
+Change: API: api/getepgdat.html, which is primarily used by DVBViewer clients for getting the Media Server EPG in binary format, now discards all data for programs ending before “Today” (00:00 of the current day), thus conforming to the DVBViewer behavior when reading data from its own epg.dat file. Previously the Media Server discarded all data for programs ending before “Now”.
+
+## Changes Media Server 3.2.2
+Added: API: Some API requests now enable the usage of an ISO 8601 date/time format subset as alternative to formats that were available so far. Dates can be written as YYYY-MM-DD or also as YYYYMMDD (YYYY = 4 digit year, MM = 2 digit month, DD = 2 digit day), times in the 24-hour clock system as hh:mm:ss or hhmmss (hh = 2 digit hours, mm = 2 digit minutes., ss = 2 digit seconds optional). Combined date/time values can be written with or without the letter T as separator between them (without is the old ISO format that was valid up to 2019). If T is omitted, the date format must be the 8 digit YYYYMMDD without hyphens as separator. In detail:
+
+api/epg.html: The start and end parameters (using the Delphi TDateTime floating point format) can be substituted by isostart and isoend parameters specifying a combined ISO date/time value (see here).
+
+api/recedit.html: The duration parameter (already using the hhmmss ISO format) can also be called isoduration for consistency. Both parameters can now be coded as hhmm or with colons as separator. Similarly the start parameter, up to now using the combined YYYYMMDDhhmmss date/time format, can now be called isostart. Both parameters may now be coded with separators and omit the seconds in the time part.
+
+api/timeradd.html and api/timeredit.html: The dor parameter specifying the timer’s date (as integer part of the Delphi TDateTime floating point format) can be substituted by an isodate parameter specifying an ISO date value. The start and stop parameters specifying the start or stop time as integer number of minutes since midnight can be substituted by isostart and isostop parameters, specifying the times as ISO time value (hhmm or hh:mm). In the same way the dur parameter (duration), that alternatively specifies the stop time as integer number of minutes since the start time can now be substituted by an isodur parameter. In any case the Media Server internally uses a duration value rounded to minutes.
+
+api/timerdelete.html: The dor, start and stop parameters for specifying the date, start and stop time of the to be deleted timer (besides the ch parameter specifying the channel ID) can be substituted by ISO date and time values in the same way as for the timeradd and timeredit API.
+
+api/searchadd.html and api/searchedit.html: The startdate and enddate parameters, previously requiring the DD.MM.YYYY date format, can now also be called isostartdate and isoenddate. Both versions accept an ISO date value, e.g. YYYYMMDD. Similarly the starttime and endtime parameters, previously strictly requiring the hh:mm time format, can now also be called isostarttime and isoendtime. Both versions accept an ISO time value.
+
+## Changes Media Server 3.1.1
+Added: API: api/recdelete.html now also accepts a recfile=[Path\Filename] parameter as alternative to recid for deleting a recording with a certain path and filename. The path and filename must be URL- and UTF-8 encoded.
+
+Added: API: api/epgstatus.html retrieves EPG status information. The XML output contains the following elements within a <epgstatus> root element:
+
+<epglang>: The preferred EPG language selected by the user.
+
+<timezone>: The current time zone bias in minutes
+
+<importstate>: Number of active import threads (0 = no import going on). It enables add-ons to find out when an asynchronously performed EPG data import via /cgi-bin/EPGimport is finished.
+
+<epgcount>: The overall number of stored EPG entries.
+
+<nextupdate>: Date/time of the next automatic EPG update in yyyymmddhhnnss format. The element is empty if no update is scheduled.
+
+<updatetotalcount> and <updatecount>: Refers to the overall / already scanned number of transponders. updatetotalcount = 0 means no EPG update is going on.
+
+## Changes Media Server 3.1.0
+Fix/Added: API: /api/status.html did not report an up-to-date timezone bias in the XML timezone element (local time offset to UTC in minutes). It was only updated after saving changes on the corresponding configuration page. /api/status2.html now provides the same information as new (last) element.
+
+## Changes Media Server 3.0.2
+Change: API: api/timerdelete.html now also allows to delete the recorded file and the recording database entry by using the delrecfile parameter after the recording has been stopped (previously only while the recording was going on, see here). A timer for a stopped recording typically continues to exist if it is stopped manually before its end time or if weekly repetition is intended.
+
+Change: API: api/timerlist.html now also exposes the filename of recordings (RealFilename string element) and the recording IDs in the recording database (RecID integer element) after the recording has been stopped (previously only while the recording was going on).
+
+Fix: Recorder/API: The EPG subheading was not stored as <Subheading> element in the file svctimers.xml and the api/timerlist.html XML output, but as <Event> element.
+
+## Changes Media Server 3.0.0
+Change: Channel List: Since the Media Server is now able to reload the channel list during runtime (without being stopped and restarted), channel numbering may change at any time. It is highly recommendable to not reference channels by their number (linear list index) anymore, but only by channel ID!
+
+Added: API: The recording element of the /api/recordings.html XML output additionally contains a lastmodified attribute. It specifies the last write time of the recording as 64 bit integer, as provided by the GetFileAttributesEx Windows API in the ftLastWriteTime member of the WIN32_FILE_ATTRIBUTE_DATA structure.
+
+Added: API: Timers have two new string properties, that appear in the api/timerlist.html XML output as <Title> and <Subheading> elements, originating from the EPG title and subheading (if available). They are “read only” and cannot be set/changed with api/timeradd.html or api/timeredit.html. The Media Server creates these members automatically if new timers are added, provided EPG data is available for the broadcast. Please note: Due to bugs in the Media Server 3.0.0 and 3.0.1 releases the <Title> and <Subheading> elements may still be missing, or the <Subheading> element may appear as <Event>. It is fixed in the bugfix upload 3.0.1.2 and later versions.
+
+Added: API: Timers have a new Boolean timeshift property. It is tailored for DVBViewer clients that delegate timeshift recordings to the Media Server. Timers that are flagged as “timeshift” are supposed to be controlled by the (DVBViewer) client that created them and are handled differently compared to normal recording timers:
+
+api/timerlist.html does not enumerate timeshift timers unless the boolean parameter withtimeshift=1 is added to the URL. Thus timeshift recordings are by default hidden for add-ons as long as they don't take special measures. In the XML output the boolean timeshift property appears as new attribute of the timer element.
+
+api/timeradd.html and api/timeredit.html can be used to set or reset the timeshift flag at any time by using the boolean timeshift=0/1 parameter and to turn a timeshift recording into a normal recording and vice versa.
+
+api/recordcount.html does not include timeshift recordings unless the boolean parameter withtimeshift=1 is added to the URL.
+
+The api/status.html and api/status2.html XML output includes timeshift recordings in the timercount element, but not in the reccount, recordcount and rectunercount elements.
+
+Timeshift recordings get no recording database entry. They appear in the timer list of the web interfaces (marked by a timeshift icon), but not in the list of recordings. In the timer list they can be stopped by deactivating or deleting the timer.
+
+The timeshift recording priority is lower. It equals the priority of stream playback. Thus timeshift recordings can be stopped at any time by normal recordings that need to occupy the device, and they are not included in the calculation of the “executable” prognosis.
+
+Web interface EPG pages don't mark entries as “scheduled for recording” that are covered by timeshift recordings.
+
+Added: API: /api/recordstats.html?id=[id] provides detailed information about ongoing recordings, as shown on the Recording Status tab of the DVBViewer Recording Statistics window. The id parameter specifies the timer ID of the recording in question. If the timer does not exist or is not recording, the server replies with 404 Not Found. Otherwise the XML output contains an empty XML element named recordstats with the following attributes:
+
+rate (integer): The mean data rate in bytes per second.
+
+size (64 bit integer): the current size of the file in bytes.
+
+totalsize (64 bit integer): the current overall size of all files belonging to the recording in bytes (considering manually or automatically split recordings). Usually size and totalsize are equal.
+
+disksize (64 bit integer): the size of the disk or partition to which the recording is written.
+
+diskfree (64 bit integer): the free space on the disk minus the minimum space configured in the Media Server options that must remain free.
+
+runtime (integer): the duration of the recording up to now in milliseconds.
+
+errors (integer): The number of discontinuities that occurred up to now.
+
+vtotal (64 bit integer): The overall processed video data in bytes.
+
+vremoved (64 bit integer): The amount of filler data removed from the processed video data in bytes.
+
+devicename (string): The name of the (DVB) device that is the source of the recorded data.
+
+pids (string): The currently recorded PIDs as comma-separated integer values. The first value specifies the number of PIDs, followed by an according number of value pairs. The first value of such a pair is the PID. The second value specifies the PID type (e.g. PMT, H.264 video, AC3 audio etc). Further information about the PID type values will be provided on demand.
+
+Change: API: api/timerrestart.html (corresponding to the DVBViewer “Delete and Restart” menu item) now shifts the start time of the restarted recording to “Now” (except in case of timers with weekly repetition), but keeps the duration. Previously the start and end time were not shifted accordingly, thus shortening the restarted recording.
+
+Change: API: api/timeradd.html now responds with 406 Not Acceptable if no channel can be assigned to the timer (because there is no sufficient match for the channel ID) or no tuner is present for the required tuner type, instead of dropping the timer silently.
+
+Change: API / M3U Export: If the Web Server is working behind a reverse proxy or if it serves a HTTPS request, Media Stream Server or Live Stream Server URLs in the output are replaced by appropriate Web Server URLs. As to M3U downloads (except RTSP), this now even applies if the “Use Web Server URLs in M3U playlists” tweak is switched off. As to the API, it applies to the getchannelsxml.html and recordings.html output.
+
+Added: Web/Live Stream Server: Ability to receive a tnr =...parameter (equal to the one that DVBViewer clients are using for RTSP) in the query part of /upnp/channelstream URLs. The URL may look like this
+
+http://127.0.0.1:8089/upnp/channelstream/?tnr=1,12188,27500,10600,1,0….
+
+The tnr parameter substitutes the channel ID. It contains a CSV list of numeric channel parameters, enabling the Media Server to deliver an untranscoded live stream without any reference to its channel list, provided a suitable device for the reception type is available. The tnr parameter can be used in scenarios where it is not sure that the Media Server channel list contains the channel in question. Besides transponder parameters (frequency etc or the URL for TS Stream) at least the service ID is required. Further specifications will be published on demand.
+
+## Changes Media Server 2.1.5
+Added: RTSP and Live Stream Server: Both are now able to deliver channel logos in the same way as the Web Server with http://[IP]:[Port]/logos/?chid=[ChannelID] or http://[IP]:[Port]/logos/[LogoFilename]
+
+Added: API: /api/timerdelete.html now allows to delete multiple timers at once by specifying a comma-separated list of timer IDs in the id =... parameter.
+
+Added: API: The version element of the /api/version.html XML output provides a new ires attribute. As to future light and demo versions, It specifies restrictions as integer bit field. Currently are defined:
+
+Bit 0 set: Read only / guest mode access.
+
+Bit 1 set: No EPG update available as task.
+
+Bit 2 set: No automatic timer creation available as task.
+
+Added: API: /api/epg.html supports additional parameters:
+
+The channel=... parameter now allows to specify a comma-separated list of EPG Channel IDs, e.g. channel=562954315180093,562954314656614,...
+
+ch=... can be used as alias for channel=...
+
+The new xgrab=filename parameter specifies a grab file that must be located in the config sub-directory of the configuration folder. It provides a list of EPG Channel IDs for which EPG data shall be fetched. The recommended file extension is .grab. The grab file content must comply to the INI format, with [Channels] as section and EPG Channel ID=Channel Name pairs. Such files can be created with XgrabDMS. Example:
+
+[Channels]
+
+562954315180093=Das Erste HD
+
+562954314656614=ZDF HD
+
+562954315180094=arte
+
+If the filename specified by the xgrab parameter is empty, the channels for which EPG data shall be fetched can be selected by additional filter parameters (similar to /api/getchannelsxml.html):
+
+None of the following parameters: All channels from the channel list
+
+fav=1 or favonly=1: Only favourites
+
+tvonly=1: Only TV channels
+
+radioonly=1: Only radio channels
+
+epgonly=1: Only channels for which EPG data is available
+
+root=[root name]: Only channels from the channel list root folder with the given name (as UTF-8)
+
+The new xmltv=1 parameter lets the Media Server create XMLTV compliant output. The utc=1 parameter and all search options are supported. All channels specified by a grab file or channels parameter (see above) are written as <channel> element to the XMLTV output, regardless whether EPG data is available for them or not. If no xgrab and no channel parameter is present, the DMS does not write <channel> elements to the XMLTV output.
+
+The new source=x parameter, where x is an integer value, specifies to be excluded EPG data sources with the following flag values: DVB EPG = 1 (Bit 0), MHW EPG = 2 (Bit 1), External EPG = 4 ((Bit 2). The default is 0, which means, all sources are allowed. If more than one source is allowed, external EPG takes priority over MHW over DVB EPG. The source parameter also applies if no channels are specified (neither by a xgrab nor by a channel or ch parameter).
+
+Fix: API: If no channels were specified and EPG data for a channel was available from different sources, /api/epg.html delivered duplicates (e.g. the same program twice from DVB and external EPG data). Now only the first available source that is allowed by the source parameter is considered, with external over MHW over DVB EPG priority. The fix does not take effect in case of TS Stream channels for which both native DVB EPG data and external EPG data with different EPG Channel IDs is available (DVB and hash based).
+
+Added: Channel List Download: A new tweak “Live stream M3U configuration” (→ launch DMSTweaker.bat) allows to specify which additional information shall be included in downloaded M3U files that contain live stream URLs for playing channels. Add the following numbers together for getting the desired set of tags:
+
+1 = add the category to the channel name.
+
+2 = category as group-title tag (only when the category changes).
+
+4 = category as group-title tag for every item.
+
+8 = channel logo URL as tvg-logo tag.
+
+16 = EPG channel ID as tvg-id tag (for XMLTV data).
+
+32 = channel name as tvg-name tag.
+
+64 = channel number as tvg-chno tag.
+
+Previous DMS versions always used 1 (category + channel name). The new default is 0 (channel name only). Example: 2 + 8 + 16 + 32 = 58 adds all tags to M3U items that are usually required for IPTV clients that get the EPG as XMLTV from the Media Server. The tweak applies to M3U channel lists that can be downloaded from the Links page and Media page of the Desktop Web Interface or from the Info page and Live TV section of the Mobile Web Interface (→ swipe a category or channel to the left).
+
+Added: API/Channel List Download: The new URL parameter tags=n, where n is a bit field as integer number, allows to configure the content of downloaded M3U files in the same way as the tweak described above. If specified it overrides the tweak setting and is applicable to the following URLs:
+
+http://[Web Server IP]:[Web Server Port]/channels.m3u
+
+http://[Web Server IP]:[Web Server Port]/transcodedchannels.m3u
+
+http://[Web Server IP]:[Web Server Port]/rtspchannels.m3u
+
+Change: API/Channel List Download: Commas in group-title and tvg-name tags are not removed anymore, particularly for conformity of tvg-name with the <display-name> element of the /api/ epg.html XMLTV output. However, commas are now replaced by blanks in the channel name at the end of EXTINF lines, in order to avoid truncated names in VLC and the Kodi Simple IPTV add-on. The hyphen as separator between category and channel name in case of live stream M3U configuration = 1 has been replaced by a comma, thus enabling category display in the VLC playlist (see here).
+
+## Changes Media Server 2.1.3
+Change: API: The EPG search preset ID, used in /api/searchedit.html as id parameter, now refers to a unique and persistent integer ID, not to the list index of search presets anymore. Particularly the user configurable default search preset can be referenced and changed by specifying id=-1 and an empty preset name. Search preset IDs are created in the same way as timer IDs (see below). In the /api/searchlist.html output the ID appears as new attribute of the search element. The change is indicated by the attribute ver=2 (instead of 1) of the searches element.
+
+Added: API: /api/searchlist.html provides a new integer parameter content=n, that specifies what shall be included in the XML output: n= 0 or 1 or missing: The stored search presets are listed without default preset (as before), n=2: only the default preset is listed,. n=3: the default and the stored presets are listed.
+
+Added: API: /api/searchadd.html and /api/searchedit.html provide new boolean parameters that are used for the “record series” function:
+
+(searchadd) recseries=1 removes season/episode information from the search phrase and copies the result to the name and series field, thus saving (DVBViewer-)clients to detect and remove this part of the EPG title when performing the “Record Series” function. However, the name and series field can be set differently if they are specified.
+
+(searchadd) checkdup=1 lets the Media Server check for duplicates and discard a new item if a search preset with the same name and search phrase already exists.
+
+(searchadd/edit) record=1 lets the Media Server immediately create timers for the referenced or to be added search preset, independently from the autorecording property. The server does not respond until the timers creation is completed.
+
+Added: API: /api/timerrestart.html?id=x stops and deletes an ongoing recording that was started by the timer with the given integer ID and immediately restarts it. The function does nothing If the timer is no recording timer or the recording has not been started yet. It is used by the “Delete and Restart” menu items of DVBViewer clients.
+
+Fix: API: If /api/timerlist.html was called right after a recording start, the xml output contained an empty recording path for the corresponding timer, causing timer list synchronization issues in DVBViewer clients.
+
+Added: API: The /api/timerlist.html XML output contains new elements and attributes. They are only present in case of an ongoing recording that was started by the timer:
+
+The new attribute Duration of the Recordstat element indicates the duration of the recording rounded to seconds.
+
+The new element RecID specifies the integer ID of the recording in the recording database.
+
+Added: API: /api/timerlist.html supports new filter parameters that allow to list recording timers selectively. Here is a complete list of all parameters:
+
+utf8=n specifies whether the xml content shall be output as UTF-8. n is an integer with the following meaning: 0 = local ANSI character set, 1 = UTF-8, 2 = UTF-8 including the channel name in the channel ID.
+
+id=n specifies the integer id of a single timer that shall be output (= IntID attribute in the Timer element). By default all timers are listed.
+
+recid=n specifies the integer ID of an ongoing recording for outputting a single timer that created the recording with this ID. The recording ID of a timer is 0 if If no ongoing recording is associated with it.
+
+reconly=1 limits the output to timers that are currently associated with ongoing recordings.
+
+enabledonly=1 limits the output to active timers, that are not disabled.
+
+## Changes Media Server 2.1.2
+Added: API: A simple key-value store allows add-ons to use the Media Server for storing settings permanently. Basically /api/store.html works like storing values in an INI file by using the UTF-8 string parameters action, sec (= section), key (or its alias id) and value. The following actions are supported:
+
+action=write: Writes the value specified by &sec=...&key=...&value=... to the store. The default value is an empty string. Please note that add-ons should use unique section names (e.g. GUIDs) in order to avoid naming conflicts.
+
+action=read (default if action is missing): Reads the value specified by &sec=...&key=... and returns it as plain text in the HTTP message body. The parameter &value=... can optionally specify a default value that is returned if the section or key does not exist. If no default is specified the API returns an empty HTTP message body in this case. If &key=... is omitted or empty the Media Server returns the whole section content as key=value pairs separated by CR/LF.
+
+action=delete: Deletes the key specified by &sec=...&key=..., or if key is omitted or empty, the whole section specified by &sec=....
+
+action=updatefile: Writes the current state of the store to the file \config\AddOnStore.xml in the configuration folder, if there are changes. This is done automatically when the Media Server is stopped or sleep mode / hibernate is triggered.
+
+Change: API: In case of /api/getconfigfile.html?file=config\service.xml the Media Server does not deliver the file anymore, but the current state of the settings from memory, thus reflecting changes that have not been saved to disk yet.
+
+Fix: API: In contrast to the Web Interface /api/searchadd.html and /api/searchedit.html did not sort the list of search presets alphabetically after changes.
+
+## Changes Media Server 2.1.0
+Added: Streaming / Subtitles: The Media Stream Server and Web Server are now able to deliver SRT subtitle files that are associated with video files. This applies to all /upnp/video/ URLs. For obtaining the SRT file the client must use the same URL, but replace the video file extension (e.g. .mkv) by .srt. Example: /upnp/video/388.mkv → /upnp/video/388.srt. A query part can be omitted. The Media Server preferably delivers the SRT file that carries the same filename as the video file, or if not available, the first found SRT file whose filename begins with the video filename. Example: movie.mkv → movie.srt (first choice) or movie.eng.srt. If no matching SRT file is available the server responds with 404 not found.
+
+Change/Added: API: /api/sideload.html now also allows to download files from recording directories (previously only from media directories) and to specify a file ID for fetching files with the same name, but a different extension. Here is a summary of the parameters that can be used:
+
+video/audio/photo/rec=1 specifies the media type. The default is video.
+
+file=name specifies the UTF-8 name of the file that shall be downloaded. Specifying a path by using backslashes is not allowed. If name contains asterisk characters the API regards it as file mask and enumerates all matching files separated by CR/LF as plain UTF-8 text. *.* means all files in the directory.
+
+dirid=n specifies the directory. n is the integer ID of the media directory. It can be retrieved with ./api/mediafiles.html. Please note that the Media Server does not provide IDs for recording directories so that a recording ID must be used here as substitute. In case of recordings there is no difference between dirid and fileid (see below).
+
+fileid=n specifies the directory where a media file is located. n is the integer ID of the media file, as used in the corresponding UPnP URL. It can be retrieved with /api/mediafiles.html as objid, or with /api/recordings.html as recording ID. fileid can be used in the same way as dirid, but additionally allows to specify a file extension as file name (with a dot as first character). In this case the Media Server delivers a file with the name of the specified media file plus the specified extension. Example: /api/sideload.html?rec=1&fileid=10&file=.log downloads the log file belonging to the recording with ID 10. /api/sideload.html?fileid=5&file=.srt fetches the SRT subtitle file belonging to the video file with ID = 5.
+
+download=1 forces browsers to download the file instead of displaying it (e.g. XML files).
+
+Change: API: The EPG Channel ID of the channel associated with timers is now written as additional attribute EPGID of the Channel element to the /api/timerlist.html output.
+
+Change: API: /api/mediafiles.html has been extended particularly for retrieving the sub-directories of a given directory. The extended API is also available as mediafiles2.html that triggers a “not found” error in previous versions that don't support the new content parameter. Here is a summary of the parameters that can be used:
+
+video/audio/photo=1 selects the database. The default is video.
+
+dirid=n selects the directory whose content shall be retrieved, where n is the integer ID of the directory. dirid=1 selects the virtual root directory that contains the (physical) user-specified directories for the media type. The default is -1 (= unspecified). It yields the same result as &dirid=1&content=2&recursive=1, which means all directories including sub-directories are enumerated in the XML output or all files in the M3U output.
+
+content=1/2/3 selects what shall be enumerated in the XML output: 1 = files (default), 2 = directories, 3 = directories and files.
+
+recursive=1 lets the API walk recursively through the sub-directories beginning with the given directory and collect all contained elements depending on the content parameter.
+
+thumbs=1 adds the thumbnail URL to the XML enumeration of files, e.g. <thumb>thumbnails/video/2658235242_SM.jpg</thumb>. In case of video this request also starts the creation of thumbnails if they don't exist yet. Since it is done asynchronously in another (FFmpeg) process thumbnails may not be available immediately. Generally thumbnails should not be assumed as being available.
+
+m3u=1 creates an M3U playlist containing URLs for all files in the given directory. The recursive parameter is supported, the content and thumbs parameters are ignored. The default is XML output.
+
+Added: API: /api/recdelete.html now allows to send multiple recording IDs as comma separated list in order to delete multiple recordings at once, e.g. recid=12,17,3... However, a returned error status code (404 Not Found, 423 Locked, 500 Internal Server Error) only refers to the last failed delete action. The API must be used with single IDs if per-recording information about successful / failed deletion is required.
+
+Added: API: api\tasks.html?action=cancel cancels an ongoing delayed system task (Shutdown, Hibernate, Standby...). Previously this task was only available via api/shutdown.html. Due to their similarity the two APIs have been merged. api/shutdown.html now does exactly the same as api/tasks.html and is deprecated, which means, it may be removed in future versions.
+
+Added: API: api/tasks.html provides a new parameter that enables listing all available internal tasks as XML including the ones that are not visible in the web interfaces: /api/tasks.html?all=1.
+
+Fix: API: /api/getchannelsxml.html did not consider filter parameters (fav, favonly, tvonly, radioonly, epgonly) if the rootsonly or groupsonly parameter were used, but used the corresponding user defined settings (see here).
+
+Change: API: /api/getchannelsxml.html does not merge categories of the same name from the Video and Audio sections of a root folder to one group anymore. This means that a group name may appear twice within a root. Furthermore it does not merge the favorites root with another channel list root of the same name anymore, so that a root name may appear twice. The tvonly, radioonly and epgonly parameters are now considered in the rootsonly and groupsonly output (previously only the fav and favonly parameters). The output creation has been speeded up considerably.
+
+Added: API: /api/searchadd.html and /api/searchedit.html provide a new parameter recradioformat (besides recformat) that specifies the radio recording format. Possible values are 0 (MP2 / MP3 / AAC / AC3 elementary stream) and 1 (transport stream). The recformat parameter now only affects TV recording (previously TV and radio).
+
+Added: API: /api/searchadd.html and /api/searchedit.html provide a new boolean parameter incremoved that corresponds to the new “Include removed recordings” checkbox in the Web Interfaces. It is set to true by default and lets the Media Server optionally check auto-timers against removed recordings that are still present as “disabled” entries in the database (see above).
+
+Added: Tasks: Possibility to create Process Tasks containing SQLite statements that are executed by the Media Server on the recording database either automatically as after-recording task or, if there are no placeholders, manually on the web interface task page (see here). Please note the following points:
+
+Knowledge about the SQLite query language is required! Please use the SQLite Browser for opening SvcDatabase.db3 (located in the Database subdirectory of the configuration folder) and getting insight in the recording database structure. You may also use the database diagrams that are attached here.
+
+The task must be created via Tray Menu → Configure with Admin Rights (launches Media Server Options) → Tasks → New. Enter a (unique) name for the task and SQLite (only that) as filename. Only the Name, Description, Filename and Parameters fields take effect on SQLite tasks. Other settings are ignored.
+
+Enter the to be executed statements in the Parameters field. Placeholders can be used in the usual way (see here). The must not be enclosed in single quotes because the Media Server automatically creates quoted strings when it replaces placeholders. A task that contains placeholders is regarded as after-recording-only task and does not appear on the Tasks Page of the web interface.
+
+Two or more statements must be separated by pipe characters “|” because the editor removes all line breaks when it stores the task. Example: UPDATE recordings SET found=0 | UPDATE recordings SET found=1.
+
+The statements may perform any write or delete operation in the recording database. Reading with SELECT does not make sense in this context. It can be done with /api/sql.html that is “read only”. Please note that wrong statements may erroneously damage the database. Create a backup of the file SvcDatabase.db3 before trying a new task.
+
+For performing case insensitive operation please use the Unicode-capable COLLATE SYSTEMNOCASE (this function is provided by the Media Server during runtime, the SQLite Browser does not know it), not the standard COLLATE NOCASE that only considers ASCII characters.
+
+Exceptions caused by faulty SQLite statements are logged including their reason in the svcdebug.log (see configuration folder).
+
+
+
+
+## Changes Media Server 2.0.4
+Added: API: New API for listing/adding/editing/deleting EPG search presets that are shown on the EPG search page of the web interface. Please note that this API requires user rights. With guest rights only listing the presets is allowed.
+
+/api/searchlist.html. Lists the available presets as XML in the same ways as in the file \config\searches.xml. No parameters are required.
+
+/api/searchdelete.html. Deletes a preset referenced by zero based index (id=...) or by name (name=...., case sensitive, UTF-8 coded). Example: searchdelete.html&name=Daily%20News. The Media Server responds with “404 not found” if the index is out of range or a preset with the given name does not exist.
+
+/api/searchedit.html. Changes an already existing preset referenced by zero based index (id=...) or by name (name=....). See above.
+
+/api/searchadd.html. Appends a new search preset to the end of the list.
+
+The following search preset properties are output by the searchlist API and received as URL query parameters from the searchedit and searchadd APIs. Please note that Boolean values are indicated as integers (0 = false, values <> 0 = true). If parameters are missing the previous value or default remains untouched.
+
+SearchPhrase (string): The word or phrase that shall be searched in the EPG data. This parameter is mandatory for the searchadd API and must not be empty.
+
+Name (string): The name of the search preset. If no name is specified on searchadd the search phrase is used as name.
+
+SearchFields (bit field as integer 1..7): Specifies in which parts of the EPG data the search phrase shall be searched. Bit 0 set: Title, Bit 1 set: Short description (subheading), Bit 2 set: Long description. The default is 3 (Bit 0 and 1 set, title and short description).
+
+IgnoreCase (boolean): Specifies whether upper/lowercase are ignored. The default value is -1 (true).
+
+UseRegEx (boolean): Specifies whether the search item shall be regarded as regular expression. The default value is 0 (false).
+
+Days (bit field as integer 1..127): Weekday filter. EPG items starting on excluded days (corresponding bit not set) are ignored. Bit 0: Monday, Bit 1: Tuesday... etc. Bit 6: Sunday. The default is 127 (all days included).
+
+StartDate, EndDate (dd.mm.yyyy or the word today/tomorrow as string): Date filter. EPG items with a start date before the specified start date or after the specified end data are ignored. By default the values are not set (unlimited). “today” or “tomorrow” as date are replaced by today's or tomorrow's date when the preset is used for a search (!) so it always remains “up-to-date”.
+
+StartTime, EndTime (hh:mm as string): Time filter. EPG items with a start time before the specified start time or after the specified end time are ignored. The default values are 00:00 and 23: 59 (unlimited).
+
+DurationMin, DurationMax (minutes as integer): Duration filter. EPG items with a duration less than the minimum duration or more than the maximum duration are ignored. The default values are 0 (unlimited).
+
+Genre (integer): Genre filter. The genre values and their meaning are enumerated in the [content] section of the Media Server language files (e.g. rc_english.lng). Only EPG items with the given Genre are included. The default value is -1 (not specified, all genres accepted).
+
+Channels (comma separated list of 64 bit integers): Channel filter. Specifies the EPG Channel IDs of the channels from which search results are collected. The default is an empty list (all channels).
+
+AutoRecording (boolean): Specifies whether timer recordings are automatically created for the search results. The default is 0 (false).
+
+The following properties only apply if AutoRecording is true:
+
+CheckRecTitle, CheckRecSubTitle (boolean): If true timers are created in disabled state if the title or the short description (the subheading) of an EPG search result equals the corresponding strings of a program that has already been recorded (but is not necessarily present on disk because the comparison refers to the recording history database). The default for both is 0 (false).
+
+CheckTimer (boolean): If true timers are created in disabled state if a timer with the same name (description) already exists. The description of timers created from EPG items is composed of the title and (if present) of the subheading separated by a blank, a hyphen and another blank. The default is 0 (false).
+
+RecordingFolder (string): The complete path of the directory where recordings resulting from auto-timers shall be stored. The default is Auto, letting the Media Server auto-select the folder.
+
+RecNameScheme (string): The file naming scheme for recordings. The default is the naming scheme configured by the user (see Media Server Options → Recordings).
+
+RecFormat (integer): The recording format. Possible values are 0 = audio only elementary stream, 1 = transport stream with the exception of program stream (*.mpg) for MPEG2 video, 2 = always transport stream.
+
+Series (string): This property has no special meaning in the Media Server. It can be used for user-defined UPnP grouping of recordings (see Web Interface → Media Page → Recordings → By Series). All recordings with the same Series string fall in the correspondent category. The default is an empty string (unspecified).
+
+Shutdown (integer): Specifies whether and how the PC shall be shutdown when the recording is finished: 0 = no action, 1 = power off, 2 = sleep mode, 3 = hibernate. The default is 0 (no action).
+
+AfterProcessAction (string): Specifies which After Recording Task shall be performed when the recording is done. It can be one of the actions enumerated by /api/tasks.html with task type = 2. The default is an empty string (no task).
+
+EPGBefore, EPGAfter (minutes as integer): Specify the lead and follow-up time that is automatically added to the start end end time of timers. The default are the values specified by the user on Media Server Options → Recordings.
+
+MonitorPDC (boolean): Specifies whether the start time of a timer shall be adjusted if the start time of the corresponding EPG item changes. Only takes effect if the broadcaster provides PDC (Program Delivery Control) The default is 0 (false).
+
+MonitorForStart (boolean): Specifies whether the EPG running status shall be monitored for accurate recording. Only takes effect if the broadcaster provides PDC and MonitorPDC is also set to true. The default is 0 (false).
+
+Priority (integer 0..100). Specifies the priority of auto-timers. 0 means low and 100 high priority. The default is 50 (medium priority). Recordings with higher priority may stop recordings with lower priority in case of competing DVB device access.
+
+Added: API: Extensions for /api/mediafiles.html. The new m3u parameter lets the Media Server deliver the list of media files contained in the specified directory as M3U file. Example:
+
+/api/mediafiles.html?audio=1&dirid=10&m3u=1
+
+The new recursive parameter lets the Media Server enumerate all files contained in the specified directory and its sub-directories. Additionally directories are listed if they do not contain media files, but only their sub-directories. Examples:
+
+/api/mediafiles.html?audio=1&recursive=1
+
+/api/mediafiles.html?audio=1&dirid=10&m3u=1&recursive=1
+
+Added: API that allows DVBViewer and other clients to get channel → logo assignments from the server:
+
+
+
+/api/getlogoassignment.html?name=[ChannelName]&id=[EPGChannelID]
+
+
+
+If the name and id parameters are both missing or empty the server delivers the current assignment table as plain UTF-8 text. The lines are id=logo filename pairs separated by CR and LF, in the same way as in the file ChannelLogos2.ini. If the channel name is specified the server searches the corresponding channel logo file algorithmically and returns the UTF-8 name. If the EPG Channel ID is specified the server picks the result from its assignment table (faster). If name and ID are specified the server first tries to get the channel logo filename from the assignment table, then in case of failure by algorithmic search and adds the result as new assignment to the table in order to speed up future access. If no logo can be assigned the server returns a hyphen (-). If no logos are available at all the server responds with 404 not found. The logo filename can be used to download the logo with the /logos/[filename] API from the web server. Please note that the logo filename may contain a relative path including backslashes (!) if the file is located in a sub-directory of \Images\Logos\.
+
+## Changes Media Server 2.0.3
+Fix: API: /api/epg.html delivered no results in case of TS Stream channels with a native DVB EPG.
+
+Added: API: If /api/tasks.html is requested without parameter the Media Server delivers the whole task list as XML, reflecting how it is displayed on the Task Page of the web interface, but with After Recording Tasks included:
+
+<tasklist>
+ <group name="EPG">
+ <task type="0">
+ <name>Start EPG Update</name>
+ <action>EPGStart</action>
+ </task>
+ <task>
+ ....
+ </task>
+ </group>
+ <group>
+ ....
+ </group>
+ ....
+</tasklist>
+The task type has the following meaning: 0 = predefined internal task, 1 = user defined process task, 2 = after recording task (user defined, should only be displayed in UIs allowing to create or edit recording timers).
+
+Action is the command that must be sent to the Media Server for executing the task, e.g. /api/task.html?task=EPGStart. For consistency the API also allows to use /api/task.html?action=....
+
+## Changes Media Server 2.0.2
+Added: Transcoded Streaming: New track parameter allowing to specify the audio track in URLs and in the expert settings of the stream configuration window of the desktop web interface. track=0 selects the first available audio track (default), track=1 the second etc.
+
+Please note that specifying a non-existing audio track may let FFmpeg stop and prevent playback altogether. If the number of available tracks is known (usually in recordings and live streams) the Media Server auto-corrects the track to 0 if it exceeds the maximum. A negative track number lets the Media Server include all available audio tracks. Offering an audio track selection is up to the player. This works with TS, WebM and partly with HLS (the Media Server "all audio tracks" output does not comply with the HLS specifications, only some players are able to handle it).
+
+## Changes Media Server 2.0.0
+Added: API: /api/epg.html now supports an additional parameter utc=1 that lets the Media Server output all EPG times as UTC instead of local time. Please note that the start=... and end=... parameters must also be specified as UTC in this case!
+
+Added: API: scheme=xxx parameter for /api/timeradd.html and /api/timeredit.html. It sets the file naming scheme for the recording. The character coding is specified by the encoding parameter (as for title, folder and series).
+
+Added: API: Possibility to retrieve the EPG Event ID of a recorded program with /api/recodings.html&eventid=1. The value 0xFFFFFFFF = 4294967295 indicates that no Event ID is available.
+
+Fix: API: If a single channel was requested with /api/getchannelsxml.html (followed by number=..., id=... or epgid=...) that didn't exist the Recording Service delivered the whole channel list. Now the output is an empty <channels> tag.
+
+Added: API: /api/getchannelsxml.html now allows to limit the output to TV channels (tvonly=1), to radio channels (radioonly=1) or to channels for which EPG data is currently available (epgonly=1).
+
+Added: API: Search for an EPG item with a certain Event ID or PDC by using /api/epg.html?channel=[EPGChannelID]&eventid=... or &pdc=. Both require specifying a channel. If an Event ID or PDC is specified other search criteria like time or search items are ignored. Please note that searching for an Event ID will only yield one result (if at all). A PDC search may deliver more than one result in case of split programs, e.g. sport events interrupted by news (see here).
+
+Added: API: Possibility to selectively delete EPG data originating from a certain source with the epgclear API:
+
+/api/epgclear.html?source=[Sources]
+
+The numeric value [Sources] specifies the to be deleted EPG types as flags that can be or'ed  (1 = DVB EPG 2 = MHW EPG, 4 = External EPG). If [Sources] is not specified the default is all EPG data (currently 7).
+
+Added: API: Possibility to directly download any file from the media file directories with
+
+/api/sideload.html?[video/audio/photo]=1&dirid=[ID]&file=[filename]
+
+where video=1 (default), audio=1 or photo=1 specify the media type, dirid=[ID] a directory ID retrieved with /api/mediafiles.html and file=[filename] the UTF-8 name of the file that shall be delivered. If [filename] is a mask containing a “*” character the API enumerates all matching files separated by CR/LF as plain UTF-8 text. Thus *.* enumerates all files in the directory. Using a slash or backslash as part of the filename for accessing parent- or sub-directories is not allowed.
+
+Added: API: Possibility to get tables from the Media Server databases as XML output by using SQLite queries:
+
+/api/sql.html?[video/audio/photo/rec]=1&query=[SQLite query]
+
+where video=1 (default), audio=1, photo=1 or rec=1 specify the database. The access is restricted to “read only”.
+
+Added: API/Trancoded Streaming (HLS): Two new parameters adjustpts and recfile can be used to control how jumping to a different position on HLS file playback is handled. Details are described in the file transcoding_params_en.txt (see Docs sub-directory of the Media Server installation directory).
+
+Added: API/Transcoded Streaming (TS): Possibility to set up permanent transcoded TS streams that are running independently from client connections and can be accessed by a (theoretically) unlimited number of clients at the same time, but only require a single FFmpeg instance.
+
+The stream is started with 
+
+/api/startts.html?streamid=[unique_name]&chid=....
+
+[unique_name] is a user defined identifier (e.g. the channel name). Additionally an ID specifying the media object (channel, file etc) that shall be transcoded is required. Other parameters are optional. The media server uses defaults if they are missing. The stream is stopped by
+
+/api/stopts.html?streamid=[unique_name]
+
+or by stopping the Recording Service. Clients can access the stream by using the following type of URL
+
+/flashstream/stream.ts?streamid=[unique_name]
+
+No further parameters are required. Please note that transcoded TS streams set up by a client connection can also be accessed by other clients if the URL contains the same stream ID or if the query string (beginning with a question mark) is identical. Please also note that this does not work with WebM and Flash.
+
+Added/Change: API/Channel List Download: As before downloading the file transcodedchannels.m3u requires specifying a TV preset and/or radio preset by using tvpreset=... and rpreset=... parameters, controlling whether TV and/or radio channels are contained in the list and which format is used. Additional parameters can be used to override the “Show Favorites Additionally / Show Favorites Only” user settings on the Web Interface configuration page that are applied by default. Each switch can be 0 (off) or 1 (on):
+
+fav=0/1: Specifies if the favorites are added at the top of the channel list (if there are any).
+
+favonly=0/1: Specifies if the channel list only contains favorites (if there are any).
+
+Additionally, if the TV and Radio presets are specified by name, the Media Server now uses the iphoneprefs.ini if the name begins with “HLS”, otherwise the ffmpegprefs.ini (containing WebM/Flash/TS presets). If the presets are specified by zero based index, it depends on the user agent. If the Media Server detects Safari or Edge, it assumes that the index refers to HLS presets, otherwise to WebM/Flash/TS presets. However, this can also be controlled by parameter:
+
+hls=0: The index refers to WebM/Flash/TS presets (ffmpegprefs.ini)
+
+hls=1: The index refers to HLS presets (iphoneprefs.ini).
+
+The following example downloads a channel list that only contains TV favorites. The format is HLS, using the second preset in the file iphoneprefs.ini:
+
+http://127.0.0.1:8089/transcodedchannels.m3u?tvpreset=1&hls=1&favonly=1
+
+Change/Added: API/Channel List Download: By default the Media Server filters the channels.m3u and rtspchannels.m3u download according to the “Show TV/Radio” and “Show Favorites Additionally / Show Favorites Only” user settings on the Web Interface configuration page. The following parameters can be used to override the settings and specify the content. Each switch can be 0 (off) or 1 (on):
+
+fav=0/1: Specifies if the favorites are added at the top of the channel list .
+
+favonly=0/1: Specifies if the channel list only contains favorites.
+
+tv=0/1: Specifies if the list contains TV channels.
+
+radio=0/1: Specifies if the list contains radio channels.
+
+Everything not specified by parameters is up to the user settings. Please note that the favorite switches are ignored if there are no favorites. fav and favonly cannot both be 1 (setting one of them to 1 switches the other one off) and tv and radio cannot both be 0 (setting one of them to 0 switches the other one on) The following example downloads a channel list that only contains TV favorites:
+
+http://127.0.0.1:8089/channels.m3u?radio=0&favonly=1
+
+Added: API/RTSP Server: Possibility to configure permanent UDP/RTP unicast and multicast streams (running independently from client access). Please note that this feature requires an extended license that allows for at least 50 Media Server clients at the same time. The streaming is performed by the RTSP server, but the configuration is done by using Web Server URLs that require full (user) access rights so it can be password protected. The URLs may use a channel ID or Sat>IP syntax to specify the data that shall be sent. The following parameters in the URL query part are supported:
+
+ip=... (required) specifies the IPv4 destination address. It may be a multicast IP like 239.0.0.1 or a local network address like 192.168.2.102 for unicast.
+
+port=... (required) specifies the destination port.
+
+nic=... (optional) specifies the IP of the network adapter through which the data shall be sent. By default it is selected by Windows.
+
+ttl=... (optional) specifies the “time to live” as integer number. The default is defined by the “Sat>IP/UPnP Multicast TTL” tweak (usually = 1, see DMSTweaker.bat, which means, the RTP multicast output is only accessible in the same subnet).
+
+rtcp=1 (optional) lets the Media Server set up a Sat>IP multicast session. An additional RTCP announcement stream carrying Sat>IP information like signal quality is sent to the subsequent destination port.
+
+Here are two configuration examples, the first one using a channel id for starting multicast, the second one using Sat>IP syntax (incomplete) for unicast:
+
+http ;//127.0.0.1:8089/rtp/?ip=239.0.0.1&port=5018&chid=2359890840093486438|ZDF
+
+http ;//127.0.0.1:8089/rtp/?ip=192.168.2.112&port=5018&&freq=11494&msys=dvbs2...
+
+PAT and PMT are adjusted to the actual output. The stream is stopped by an URL that specifies the same IP and port. Additional parameters are ignored in this case. So the same URL can be used for switching the stream on/off.
+
