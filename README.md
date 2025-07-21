@@ -1,0 +1,2 @@
+# MediaServerAPI
+MediaServer API documentation
