@@ -5,7 +5,10 @@ MediaServer API documentation
 
 
 ##### API Documentation
-./documentation
+./ms_docu/MediaServer_API.md
+./ms_docu/MediaServer_API.html
+
+
 
 #### AI Prompt and source files
 ./ai_source
