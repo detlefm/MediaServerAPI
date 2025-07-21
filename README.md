@@ -17,4 +17,9 @@ MediaServer API documentation
 
 https://www.kimi.com/chat/
 
+
+#### Github Pages 
+
+https://detlefm.github.io/MediaServerAPI/Index.html
+
 21.07.2025
