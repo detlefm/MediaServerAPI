@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>MediaServer API</title>
+  <style>
+    /* === BASIC RESET === */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #222;
+      background: #fafafa;
+    }
+    /* === LAYOUT === */
+    .wrapper {
+      max-width: 100%;
+      margin: 40px auto;   /* 40 px top/bottom + auto left/right centers block */
+      padding: 0 40px;     /* 40 px left/right page margins */
+    }
+    /* === TYPOGRAPHY === */
+    h1, h2, h3, h4, h5, h6 { margin: 1.2em 0 0.4em; line-height: 1.25; }
+    h1 { font-size: 1.8em; }
+    h2 { font-size: 1.6em; }
+    h3 { font-size: 1.3em; }
+    p  { margin: 0.6em 0; }
+    ul, ol { margin: 0.6em 0 0.6em 2em; }
+    code {
+      background: #eee;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 1.2em;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 1em;
+      overflow-x: auto;
+      border-radius: 4px;
+    }
+    blockquote {
+      margin: 1em 0;
+      padding-left: 1em;
+      border-left: 4px solid #ccc;
+      color: #555;
+    }
+    /* === TABLES === */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+    }
+    th, td {
+      padding: 0.6em 0.8em;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #f0f0f0;
+      font-weight: 600;
+    }
+    tr:nth-child(odd) td {
+      background: #fafafa;
+    }
+    /* === IMAGES === */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 1em auto;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+<h1>Media Server API Documentation</h1>
+<p>Version 3.3.1 – July 2025<br/>
+<em>Consolidated from all change logs and original RecordingService.md</em></p>
+
+<p>All functions are guaranteed to work with Media Server 3.3.1 or later.<br/>
+For problems, please post in the official Forum.</p>
+
+<hr/>
+
+<h2>1. General Information</h2>
+
+<h3>Base URL</h3>
+<pre><code>http://[user]:[password]@[IP]:[port]/api/</code></pre>
+<ul>
+<li>Reserved characters in <code>user</code>/<code>password</code> must be URL-encoded (<a href="https://en.wikipedia.org/wiki/Percent-encoding#Percent-encoding_reserved_characters">Wikipedia Percent-encoding</a>)</li>
+<li>All XML responses are UTF-8 unless a different encoding is forced by the client.</li>
+<li>Two user accounts exist:
+  <ul>
+<li>Normal user (full access)</li>
+<li>Guest user (read-only) – check <code>&lt;rights&gt;</code> in <code>/api/status2.html</code></li>
+  </ul>
+</li>
+</ul>
+
+<hr/>
+
+<h2>2. Status Information</h2>
+
+<h3>2.1 Version</h3>
+<p><strong>GET</strong> <code>/api/version.html</code></p>
+
+<p><strong>Response</strong> (XML):</p>
+<pre><code>&lt;version iver="18939904" inst="0" ires="0"&gt;
+  DVBViewer Recording Service 1.33.0.0 (beta) (PC-NAME)
+&lt;/version&gt;</code></pre>
+<ul>
+<li><code>iver</code>: Major×2²⁴ + Minor×2¹⁶ + Revision×2⁸ + Build</li>
+<li><code>inst</code>: Zero-based instance number (0-3) – introduced in 3.3.1</li>
+<li><code>ires</code>: Bit-field restrictions (Bit 0 = read-only, Bit 1 = no EPG update task, Bit 2 = no auto-timer task) – introduced in 2.1.5</li>
+</ul>
+
+<h3>2.2 Status2</h3>
+<p><strong>GET</strong> <code>/api/status2.html</code></p>
+
+<p><strong>Response</strong> (XML):</p>
+<pre><code>&lt;status&gt;
+  &lt;timercount&gt;0&lt;/timercount&gt;
+  &lt;reccount&gt;0&lt;/reccount&gt;
+  &lt;nexttimer&gt;-1&lt;/nexttimer&gt;
+  &lt;nextrec&gt;-1&lt;/nextrec&gt;
+  &lt;streamclientcount&gt;0&lt;/streamclientcount&gt;
+  &lt;rtspclientcount&gt;0&lt;/rtspclientcount&gt;
+  &lt;unicastclientcount&gt;0&lt;/unicastclientcount&gt;
+  &lt;lastuiaccess&gt;13&lt;/lastuiaccess&gt;
+  &lt;standbyblock&gt;1&lt;/standbyblock&gt;
+  &lt;tunercount&gt;0&lt;/tunercount&gt;
+  &lt;streamtunercount&gt;0&lt;/streamtunercount&gt;
+  &lt;rectunercount&gt;0&lt;/rectunercount&gt;
+  &lt;epgudate&gt;0&lt;/epgudate&gt;
+  &lt;rights&gt;full&lt;/rights&gt;
+  &lt;recfiles&gt;2&lt;/recfiles&gt;
+  &lt;recfolders&gt;
+    &lt;folder size="1445946646528" free="15966986240"&gt;
+      E:\Recorded TV
+    &lt;/folder&gt;
+    &lt;folder size="57404289024" free="3202850816"&gt;
+      C:\Users\Public\Recorded TV
+    &lt;/folder&gt;
+  &lt;/recfolders&gt;
+  &lt;timezone&gt;120&lt;/timezone&gt;
+&lt;/status&gt;</code></pre>
+<ul>
+<li><code>&lt;timezone&gt;</code> added in 3.1.0 (bias in minutes)</li>
+</ul>
+
+<hr/>
+
+<h2>3. Configuration Files – Settings</h2>
+
+<h3>3.1 getconfigfile</h3>
+<p><strong>GET</strong> <code>/api/getconfigfile.html?file=[relativePath]</code></p>
+<ul>
+<li>Wildcard <code>*</code> allowed</li>
+<li><code>userdata*</code> files are excluded</li>
+<li>From 2.1.2 the file <code>config\service.xml</code> is served from memory (unsaved changes included)</li>
+</ul>
+
+<p><strong>Examples</strong><br/>
+curl:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/getconfigfile.html?file=config%5Cservice.xml"</code></pre>
+<p>Python:</p>
+<pre><code>import requests
+url = "http://192.168.1.2:8089/api/getconfigfile.html"
+params = {"file": r"config\service.xml"}
+r = requests.get(url, params=params, auth=("user", "pass"))
+print(r.text)</code></pre>
+
+<h3>3.2 setting</h3>
+<p><strong>GET</strong> <code>/api/setting.html?sec=[section]&amp;id=[identifier]&amp;def=[default]</code></p>
+
+<p>Returns plain text value of the requested key.</p>
+
+<p><strong>Example</strong><br/>
+Get streaming port:</p>
+<pre><code>http://user:pass@192.168.1.2:8089/api/setting.html?sec=WebGeneral&amp;id=StreamPort&amp;def=7522</code></pre>
+
+<hr/>
+
+<h2>4. Channel/Favourite List</h2>
+
+<h3>4.1 getchannelsxml</h3>
+<p><strong>GET</strong> <code>/api/getchannelsxml.html</code></p>
+
+<p><strong>Query Parameters</strong> (all optional):</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>rootsonly=1</td><td>int</td><td>0</td><td>Only root nodes</td></tr>
+  <tr><td>group=[Name]</td><td>str</td><td>—</td><td>Filter by category</td></tr>
+  <tr><td>id=[ChannelID]</td><td>int</td><td>—</td><td>Single channel</td></tr>
+  <tr><td>logo=1</td><td>int</td><td>0</td><td>Include logo URLs</td></tr>
+  <tr><td>rtsp=1</td><td>int</td><td>0</td><td>Include RTSP URLs</td></tr>
+  <tr><td>upnp=1</td><td>int</td><td>0</td><td>Include UPnP URLs</td></tr>
+  <tr><td>subchannels=1</td><td>int</td><td>0</td><td>Include audio subchannels</td></tr>
+  <tr><td>tvonly=1</td><td>int</td><td>0</td><td>Only TV (since 2.0)</td></tr>
+  <tr><td>radioonly=1</td><td>int</td><td>0</td><td>Only radio (since 2.0)</td></tr>
+  <tr><td>epgonly=1</td><td>int</td><td>0</td><td>Only channels with EPG (since 2.0)</td></tr>
+  <tr><td>fav=0/1</td><td>int</td><td>—</td><td>Override “add favorites” setting</td></tr>
+  <tr><td>favonly=0/1</td><td>int</td><td>—</td><td>Override “favorites only” setting</td></tr>
+</table>
+
+<p><strong>Changes</strong></p>
+<ul>
+<li>2.0: Added tvonly, radioonly, epgonly</li>
+<li>2.1.0: When single channel does not exist → empty <code>&lt;channels/&gt;</code> (was full list)</li>
+<li>2.1.0: rootsonly & groupsonly now respect tvonly/radioonly/epgonly</li>
+</ul>
+
+<p><strong>Example</strong><br/>
+Return only TV favorites with logos:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/getchannelsxml.html?tvonly=1&amp;favonly=1&amp;logo=1"</code></pre>
+
+<h3>4.2 getlogoassignment</h3>
+<p><strong>GET</strong> <code>/api/getlogoassignment.html?name=[ChannelName]&amp;id=[EPGChannelID]</code></p>
+<ul>
+<li>Returns logo filename or <code>-</code> if none</li>
+<li>404 if no logos available</li>
+<li>Backslashes allowed in returned filename (relative to <code>\Images\Logos\</code>)</li>
+</ul>
+
+<p><strong>Example</strong></p>
+<pre><code>curl "http://192.168.1.2:8089/api/getlogoassignment.html?name=Das%20Erste&amp;id=562954315180093"</code></pre>
+
+<hr/>
+
+<h2>5. Media Files</h2>
+
+<h3>5.1 mediafiles / mediafiles2</h3>
+<p><strong>GET</strong> <code>/api/mediafiles.html</code> or <code>/api/mediafiles2.html</code> <em>(mediafiles2 triggers 404 on old servers)</em></p>
+
+<p><strong>Parameters</strong>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>video=1</td><td>int</td><td>1</td><td>Video database</td></tr>
+  <tr><td>audio=1</td><td>int</td><td>0</td><td>Audio database</td></tr>
+  <tr><td>photo=1</td><td>int</td><td>0</td><td>Photo database</td></tr>
+  <tr><td>dirid=n</td><td>int</td><td>-1</td><td>Directory ID</td></tr>
+  <tr><td>content=1/2/3</td><td>int</td><td>1</td><td>1=files, 2=directories, 3=both</td></tr>
+  <tr><td>recursive=1</td><td>int</td><td>0</td><td>Walk sub-dirs</td></tr>
+  <tr><td>thumbs=1</td><td>int</td><td>0</td><td>Include thumbnail URLs</td></tr>
+  <tr><td>m3u=1</td><td>int</td><td>0</td><td>Return M3U playlist</td></tr>
+</table>
+
+<p><strong>Example</strong><br/>
+List all audio files recursively as M3U:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/mediafiles.html?audio=1&amp;recursive=1&amp;m3u=1"</code></pre>
+
+<h3>5.2 sideload</h3>
+<p><strong>GET</strong> <code>/api/sideload.html</code></p>
+
+<p><strong>Parameters</strong>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>video/audio/photo/rec=1</td><td>int</td><td>video=1</td><td>Media type</td></tr>
+  <tr><td>dirid=n</td><td>int</td><td>—</td><td>Directory ID</td></tr>
+  <tr><td>fileid=n</td><td>int</td><td>—</td><td>File/recording ID (same as dirid for recordings)</td></tr>
+  <tr><td>file=[name]</td><td>str</td><td>—</td><td>UTF-8 filename or mask (<code>*</code> allowed)</td></tr>
+  <tr><td>download=1</td><td>int</td><td>0</td><td>Force download header</td></tr>
+</table>
+
+<ul>
+<li>From 2.1.0 supports recording directories</li>
+<li>From 2.1.0 supports extension replacement via <code>.ext</code> (e.g. <code>file=.srt</code>)</li>
+</ul>
+
+<p><strong>Examples</strong><br/>
+Download recording log:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/sideload.html?rec=1&amp;fileid=10&amp;file=.log&amp;download=1"</code></pre>
+
+<hr/>
+
+<h2>6. Streaming</h2>
+
+<h3>6.1 M3U Playlists</h3>
+<p><strong>GET</strong></p>
+<ul>
+<li><code>/channels.m3u</code> (live)</li>
+<li><code>/transcodedchannels.m3u</code> (transcoded)</li>
+<li><code>/rtspchannels.m3u</code> (RTSP)</li>
+</ul>
+
+<p><strong>Channel List Download Parameters</strong> <em>(apply to all three URLs)</em>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>tv=0/1</td><td>int</td><td>user</td><td>Include TV channels</td></tr>
+  <tr><td>radio=0/1</td><td>int</td><td>user</td><td>Include radio channels</td></tr>
+  <tr><td>fav=0/1</td><td>int</td><td>user</td><td>Add favorites on top</td></tr>
+  <tr><td>favonly=0/1</td><td>int</td><td>user</td><td>Only favorites</td></tr>
+  <tr><td>tags=n</td><td>int</td><td>tweak</td><td>Bit field for EXTINF tags (see 2.1.5)</td></tr>
+  <tr><td>tvpreset / rpreset</td><td>int/str</td><td>—</td><td>Transcoding preset</td></tr>
+  <tr><td>hls=0/1</td><td>int</td><td>UA-based</td><td>Preset file selection</td></tr>
+</table>
+
+<p><strong>tags</strong> bit values (add together):<br/>
+1 = category in name<br/>
+2 = group-title on change<br/>
+4 = group-title always<br/>
+8 = tvg-logo URL<br/>
+16 = tvg-id<br/>
+32 = tvg-name<br/>
+64 = tvg-chno</p>
+
+<p><strong>Example</strong><br/>
+HLS TV favorites only, second preset:</p>
+<pre><code>http://192.168.1.2:8089/transcodedchannels.m3u?tvpreset=1&amp;hls=1&amp;favonly=1</code></pre>
+
+<h3>6.2 HLS</h3>
+<ul>
+<li>Start: <code>/api/starthls.html?...</code></li>
+<li>Master playlist: <code>/master.m3u8?...</code></li>
+</ul>
+<p>Parameters documented in <code>transcoding_params_en.txt</code> (not repeated here).</p>
+
+<h3>6.3 Permanent Transcoded TS</h3>
+<p><strong>Start</strong><br/>
+<strong>GET</strong> <code>/api/startts.html?streamid=[unique_name]&amp;chid=[...]&amp;...</code></p>
+
+<p><strong>Stop</strong><br/>
+<strong>GET</strong> <code>/api/stopts.html?streamid=[unique_name]</code></p>
+
+<p>Client URL:</p>
+<pre><code>/flashstream/stream.ts?streamid=[unique_name]</code></pre>
+<ul>
+<li>Added in 2.0.0</li>
+<li>Unlimited concurrent clients, single FFmpeg instance</li>
+<li>WebM/Flash <strong>not</strong> supported</li>
+</ul>
+
+<h3>6.4 RTSP / Live Permanent UDP/RTP</h3>
+<p><strong>GET</strong> <code>/rtp/?ip=[dest]&amp;port=[p]&amp;chid=[...]&amp;...</code></p>
+<ul>
+<li>Required: <code>ip</code>, <code>port</code></li>
+<li>Optional: <code>nic</code>, <code>ttl</code>, <code>rtcp=1</code> (Sat&gt;IP multicast)</li>
+<li>Same URL toggles ON/OFF.</li>
+<li>Requires ≥50-client license (2.1.5).</li>
+</ul>
+
+<hr/>
+
+<h2>7. Recordings</h2>
+
+<h3>7.1 recordings</h3>
+<p><strong>GET</strong> <code>/api/recordings.html</code></p>
+
+<p><strong>Parameters</strong>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>utf8=1</td><td>int</td><td>0</td><td>UTF-8 response</td></tr>
+  <tr><td>nofilename=1</td><td>int</td><td>0</td><td>Exclude filenames</td></tr>
+  <tr><td>images=1</td><td>int</td><td>0</td><td>Include thumbnails</td></tr>
+  <tr><td>id=[recid]</td><td>int</td><td>—</td><td>Single recording</td></tr>
+</table>
+
+<ul>
+<li>From 3.0.0 each <code>&lt;recording&gt;</code> has <code>lastmodified</code> attribute (64-bit Windows FILETIME)</li>
+<li>From 3.0.2 stopped recordings expose <code>RealFilename</code> and <code>RecID</code></li>
+</ul>
+
+<p><strong>Example</strong></p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/recordings.html?utf8=1&amp;images=1"</code></pre>
+
+<h3>7.2 recdelete</h3>
+<p><strong>GET</strong> <code>/api/recdelete.html</code></p>
+
+<p><strong>Parameters</strong> (one required):</p>
+<ul>
+<li><code>recid=[id]</code> – single or comma-separated list (since 2.1.0)</li>
+<li><code>recfile=[path\filename]</code> – path must be UTF-8 &amp; URL-encoded (since 3.1.1)</li>
+<li><code>delfile=1</code> – delete file + DB entry (works after stop since 3.0.2)</li>
+</ul>
+<p>Returns <code>423 Locked</code> if recording active.<br/>
+Bulk delete error status refers only to last failure.</p>
+
+<p><strong>Examples</strong><br/>
+Delete multiple recordings:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/recdelete.html?recid=12,17,3&amp;delfile=1"</code></pre>
+<p>Delete by filename:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/recdelete.html?recfile=E%3A%5CRecorded%20TV%5CMyShow.ts&amp;delfile=1"</code></pre>
+
+<h3>7.3 recordstats</h3>
+<p><strong>GET</strong> <code>/api/recordstats.html?id=[timerID]</code></p>
+
+<p><strong>Response</strong> (XML attributes only):</p>
+<pre><code>&lt;recordstats rate="8123456" size="1234567890" totalsize="1234567890"
+             disksize="1445946646528" diskfree="15966986240"
+             runtime="1800000" errors="0" vtotal="1234567890"
+             vremoved="0" devicename="DVB-S2 TBS 6981"
+             pids="3,101,2,102,4,103,15" /&gt;</code></pre>
+<ul>
+<li>Added in 3.0.0</li>
+<li>404 if timer does not exist or not recording</li>
+</ul>
+
+<hr/>
+
+<h2>8. EPG</h2>
+
+<h3>8.1 epg</h3>
+<p><strong>GET</strong> <code>/api/epg.html</code></p>
+
+<p><strong>Parameters</strong>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>lvl=2</td><td>int</td><td>required</td><td>Detail level</td></tr>
+  <tr><td>channel / ch</td><td>list</td><td>—</td><td>Comma-separated EPG Channel IDs</td></tr>
+  <tr><td>start / end</td><td>float</td><td>—</td><td>Delphi TDateTime range (local)</td></tr>
+  <tr><td>isostart / isoend</td><td>ISO</td><td>—</td><td>ISO8601 alternative (since 3.2.2)</td></tr>
+  <tr><td>utc=1</td><td>int</td><td>0</td><td>All times in UTC (since 2.0)</td></tr>
+  <tr><td>search=[term]</td><td>str</td><td>—</td><td>Search phrase</td></tr>
+  <tr><td>options=[TSD]</td><td>str</td><td>—</td><td>T=title, S=subtitle, D=description</td></tr>
+  <tr><td>eventid=[id]</td><td>int</td><td>—</td><td>Exact Event ID (since 2.0)</td></tr>
+  <tr><td>pdc=[hex]</td><td>hex</td><td>—</td><td>PDC search (since 2.0)</td></tr>
+  <tr><td>xmltv=1</td><td>int</td><td>0</td><td>XMLTV compliant output (since 2.1.5)</td></tr>
+  <tr><td>source=n</td><td>int</td><td>0</td><td>Bit mask to exclude sources (1=DVB,2=MHW,4=External)</td></tr>
+  <tr><td>xgrab=[file]</td><td>str</td><td>—</td><td>INI grab file in config subdir (since 2.1.5)</td></tr>
+</table>
+
+<p><strong>Changes</strong></p>
+<ul>
+<li>2.0: added utc, eventid, pdc, source filtering</li>
+<li>2.1.5: added channel lists, xmltv, xgrab</li>
+<li>3.2.2: added ISO date/time alternatives</li>
+</ul>
+
+<p><strong>Example</strong><br/>
+UTC XMLTV for two channels:</p>
+<pre><code>curl "http://192.168.1.2:8089/api/epg.html?channel=562954315180093,562954314656614&amp;xmltv=1&amp;utc=1"</code></pre>
+
+<h3>8.2 epgclear</h3>
+<p><strong>GET</strong> <code>/api/epgclear.html?source=[Sources]</code></p>
+<ul>
+<li><code>Sources</code> as bit mask: 1=DVB, 2=MHW, 4=External</li>
+<li>Default (omit) = 7 (all)</li>
+<li>Added in 2.0.0</li>
+</ul>
+
+<h3>8.3 EPGimport</h3>
+<p><strong>POST</strong> <code>http://[user:pass@]IP:port/cgi-bin/EPGimport</code></p>
+<ul>
+<li>Body: valid EPG XML (same format as epg.html response)</li>
+<li>Asynchronous; monitor with <code>/api/epgstatus.html</code></li>
+</ul>
+
+<h3>8.4 epgstatus</h3>
+<p><strong>GET</strong> <code>/api/epgstatus.html</code></p>
+
+<p><strong>Response</strong>:</p>
+<pre><code>&lt;epgstatus&gt;
+  &lt;epglang&gt;en&lt;/epglang&gt;
+  &lt;timezone&gt;120&lt;/timezone&gt;
+  &lt;importstate&gt;0&lt;/importstate&gt;
+  &lt;epgcount&gt;45230&lt;/epgcount&gt;
+  &lt;nextupdate&gt;20250722013000&lt;/nextupdate&gt;
+  &lt;updatetotalcount&gt;0&lt;/updatetotalcount&gt;
+  &lt;updatecount&gt;0&lt;/updatecount&gt;
+&lt;/epgstatus&gt;</code></pre>
+<ul>
+<li>Added in 3.1.1</li>
+</ul>
+
+<hr/>
+
+<h2>9. Timer Management</h2>
+
+<h3>9.1 timerlist</h3>
+<p><strong>GET</strong> <code>/api/timerlist.html</code></p>
+
+<p><strong>Parameters</strong>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>utf8=0/1/2</td><td>int</td><td>0</td><td>0=ANSI, 1=UTF-8, 2=UTF-8+channel name</td></tr>
+  <tr><td>id=[timerID]</td><td>int</td><td>—</td><td>Single timer</td></tr>
+  <tr><td>recid=[id]</td><td>int</td><td>—</td><td>Timer that created recording</td></tr>
+  <tr><td>reconly=1</td><td>int</td><td>0</td><td>Timers with ongoing recordings</td></tr>
+  <tr><td>enabledonly=1</td><td>int</td><td>0</td><td>Active (non-disabled) timers</td></tr>
+  <tr><td>withtimeshift=1</td><td>int</td><td>0</td><td>Include timeshift timers (since 3.0.0)</td></tr>
+</table>
+
+<p><strong>Response additions since 3.0.0</strong></p>
+<ul>
+<li><code>&lt;Title&gt;</code>, <code>&lt;Subheading&gt;</code> (read-only, from EPG)</li>
+<li><code>&lt;RealFilename&gt;</code> &amp; <code>&lt;RecID&gt;</code> after stop (3.0.2)</li>
+<li><code>Duration</code> attribute in <code>&lt;Recordstat&gt;</code></li>
+<li><code>EPGID</code> attribute on <code>&lt;Channel&gt;</code> (2.1.0)</li>
+<li><code>timeshift="0/1"</code> attribute on <code>&lt;Timer&gt;</code> (3.0.0)</li>
+</ul>
+
+<h3>9.2 timeradd</h3>
+<p><strong>GET</strong> <code>/api/timeradd.html</code></p>
+
+<p><strong>Parameters</strong>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>ch</td><td>int</td><td>required</td><td>Channel ID (32/64-bit)</td></tr>
+  <tr><td>dor / isodate</td><td>date</td><td>required</td><td>Recording date</td></tr>
+  <tr><td>start / isostart</td><td>time</td><td>required</td><td>Start (minutes since midnight or ISO)</td></tr>
+  <tr><td>stop / isostop</td><td>time</td><td>required</td><td>Stop (…)</td></tr>
+  <tr><td>isodur / dur</td><td>int</td><td>—</td><td>Duration in minutes (alternative)</td></tr>
+  <tr><td>enable=0/1</td><td>int</td><td>required</td><td>Enable timer</td></tr>
+  <tr><td>title</td><td>str</td><td>—</td><td>Timer name</td></tr>
+  <tr><td>days</td><td>str</td><td>—</td><td>7-char weekday mask</td></tr>
+  <tr><td>action=0/1</td><td>int</td><td>0</td><td>0=Record, 1=Tune</td></tr>
+  <tr><td>prio=0-100</td><td>int</td><td>50</td><td>Priority</td></tr>
+  <tr><td>scheme</td><td>str</td><td>—</td><td>File naming scheme (since 2.0)</td></tr>
+  <tr><td>encoding</td><td>str</td><td>—</td><td>Character encoding for scheme/title/folder/series</td></tr>
+  <tr><td>timeshift=0/1</td><td>int</td><td>0</td><td>Timeshift flag (since 3.0.0)</td></tr>
+</table>
+
+<p><strong>Changes</strong></p>
+<ul>
+<li>2.0: added scheme, encoding</li>
+<li>3.0.0: added timeshift</li>
+<li>3.0.0: returns 406 if channel/tuner unavailable (instead of silent drop)</li>
+<li>3.2.2: ISO date/time alternatives</li>
+</ul>
+
+<p><strong>Example</strong><br/>
+Add daily timer in ISO format:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/timeradd.html?ch=562954315180093&amp;isodate=2025-07-21&amp;isostart=20:15&amp;isostop=21:45&amp;enable=1&amp;title=Evening%20News"</code></pre>
+
+<h3>9.3 timeredit</h3>
+<p><strong>GET</strong> <code>/api/timeredit.html</code></p>
+<p>Same parameters as <code>timeradd</code> plus <code>id=[timerID]</code> (mandatory).<br/>
+Changes same as timeradd.</p>
+
+<h3>9.4 timerdelete</h3>
+<p><strong>GET</strong> <code>/api/timerdelete.html</code></p>
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><code>id=[timerID]</code> – single or comma-separated list (since 2.1.5)</li>
+<li><code>delrecfile=1</code> – also delete recording file if stopped (since 3.0.2)</li>
+<li>Alternative date/time parameters same as timeradd (since 3.2.2)</li>
+</ul>
+
+<h3>9.5 timerrestart</h3>
+<p><strong>GET</strong> <code>/api/timerrestart.html?id=[timerID]</code></p>
+<ul>
+<li>Stops &amp; deletes ongoing recording then restarts immediately</li>
+<li>Shifts start to “now”, keeps duration (since 3.0.0)</li>
+<li>No effect if not recording or weekly repetition</li>
+</ul>
+
+<hr/>
+
+<h2>10. EPG Search Presets</h2>
+
+<h3>10.1 searchlist</h3>
+<p><strong>GET</strong> <code>/api/searchlist.html</code></p>
+
+<p><strong>Parameters</strong>:</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>content=0/1/2/3</td><td>int</td><td>0</td><td>0/1=presets only, 2=default only, 3=both (since 2.1.3)</td></tr>
+</table>
+
+<p><strong>Response</strong>:</p>
+<pre><code>&lt;searches ver="2"&gt;
+  &lt;search id="123" ...&gt; ... &lt;/search&gt;
+&lt;/searches&gt;</code></pre>
+<ul>
+<li><code>ver=2</code> indicates persistent IDs (since 2.1.3)</li>
+</ul>
+
+<h3>10.2 searchadd / searchedit / searchdelete</h3>
+<p><strong>GET</strong> endpoints:</p>
+<ul>
+<li><code>/api/searchadd.html</code></li>
+<li><code>/api/searchedit.html?id=[id]&amp;name=[name]</code></li>
+<li><code>/api/searchdelete.html?id=[id]&amp;name=[name]</code></li>
+</ul>
+
+<p><strong>Common Parameters</strong> (URL query):</p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Default</th><th>Meaning</th></tr>
+  <tr><td>SearchPhrase</td><td>str</td><td>—</td><td>Required for add</td></tr>
+  <tr><td>Name</td><td>str</td><td>—</td><td>Preset name</td></tr>
+  <tr><td>SearchFields</td><td>int</td><td>3</td><td>Bit 0=title,1=subtitle,2=desc</td></tr>
+  <tr><td>IgnoreCase</td><td>int</td><td>-1</td><td>1=ignore case</td></tr>
+  <tr><td>UseRegEx</td><td>int</td><td>0</td><td>1=regex</td></tr>
+  <tr><td>Days</td><td>int</td><td>127</td><td>Bit mask Mon-Sun</td></tr>
+  <tr><td>StartDate / isostartdate</td><td>date</td><td>—</td><td>ISO or dd.mm.yyyy</td></tr>
+  <tr><td>EndDate / isoenddate</td><td>date</td><td>—</td><td>—</td></tr>
+  <tr><td>StartTime / isostarttime</td><td>time</td><td>—</td><td>hh:mm or ISO</td></tr>
+  <tr><td>EndTime / isoendtime</td><td>time</td><td>—</td><td>—</td></tr>
+  <tr><td>DurationMin / Max</td><td>int</td><td>0</td><td>Minutes</td></tr>
+  <tr><td>Genre</td><td>int</td><td>-1</td><td>Genre filter</td></tr>
+  <tr><td>Channels</td><td>csv</td><td>—</td><td>EPG Channel IDs</td></tr>
+  <tr><td>AutoRecording</td><td>int</td><td>0</td><td>Create auto-timers</td></tr>
+  <tr><td>recseries=1</td><td>int</td><td>0</td><td>Strip season/episode (since 2.1.3)</td></tr>
+  <tr><td>checkdup=1</td><td>int</td><td>0</td><td>Skip duplicates (since 2.1.3)</td></tr>
+  <tr><td>record=1</td><td>int</td><td>0</td><td>Create timers immediately (since 2.1.3)</td></tr>
+  <tr><td>recformat</td><td>int</td><td>—</td><td>TV recording format (0/1/2)</td></tr>
+  <tr><td>recradioformat</td><td>int</td><td>—</td><td>Radio recording format (0/1)</td></tr>
+  <tr><td>incremoved=1</td><td>int</td><td>1</td><td>Include removed recordings (since 2.1.0)</td></tr>
+  <tr><td>Series</td><td>str</td><td>—</td><td>Series grouping string</td></tr>
+</table>
+
+<p>(Additional recording-specific parameters identical to <code>timeradd</code>.)</p>
+
+<p><strong>Changes</strong></p>
+<ul>
+<li>2.0.4: API introduced</li>
+<li>2.1.3: IDs persistent (<code>ver=2</code>), added content parameter</li>
+<li>2.1.3: added recseries, checkdup, record flags</li>
+<li>2.1.0: added incremoved, recradioformat</li>
+<li>3.2.2: ISO date/time parameters supported</li>
+</ul>
+
+<hr/>
+
+<h2>11. Tasks &amp; System Control</h2>
+
+<h3>11.1 tasks</h3>
+<p><strong>GET</strong> <code>/api/tasks.html</code></p>
+
+<table>
+  <tr><th>Param</th><th>Type</th><th>Meaning</th></tr>
+  <tr><td>task=[name]</td><td>str</td><td>Execute task</td></tr>
+  <tr><td>action=[name]</td><td>str</td><td>Alias for task</td></tr>
+  <tr><td>all=1</td><td>int</td><td>List all internal tasks (since 2.1.0)</td></tr>
+  <tr><td>action=cancel</td><td>str</td><td>Cancel delayed shutdown/hibernate (since 2.1.0)</td></tr>
+</table>
+
+<p><strong>Returned task list (XML)</strong> when no parameters:</p>
+<pre><code>&lt;tasklist&gt;
+  &lt;group name="EPG"&gt;
+    &lt;task type="0"&gt;
+      &lt;name&gt;Start EPG Update&lt;/name&gt;
+      &lt;action&gt;EPGStart&lt;/action&gt;
+    &lt;/task&gt;
+  &lt;/group&gt;
+&lt;/tasklist&gt;</code></pre>
+<ul>
+<li><code>type</code>: 0=internal, 1=user process, 2=after-recording task</li>
+</ul>
+
+<p><strong>Built-in tasks</strong>:<br/>
+<code>EPGStart</code>, <code>Hibernate</code>, <code>Standby</code>, <code>Shutdown</code>, <code>AutoTimer</code></p>
+
+<h3>11.2 dvbcommand</h3>
+<p><strong>GET</strong> <code>/api/dvbcommand.html</code></p>
+<ul>
+<li>List clients (no parameters)</li>
+<li>Send command:<br/>
+  <code>/api/dvbcommand.html?target=[PCname]&amp;cmd=[DVBViewer command]</code></li>
+</ul>
+
+<hr/>
+
+<h2>12. SQLite Read-Only Access</h2>
+<p><strong>GET</strong> <code>/api/sql.html?[video/audio/photo/rec]=1&amp;query=[SQLite query]</code></p>
+<ul>
+<li>Added in 2.0.0</li>
+<li>Read-only access to databases</li>
+<li>Use <code>COLLATE SYSTEMNOCASE</code> for case-insensitive Unicode</li>
+</ul>
+
+<p><strong>Example</strong><br/>
+Count video files:</p>
+<pre><code>curl -u user:pass "http://192.168.1.2:8089/api/sql.html?video=1&amp;query=SELECT COUNT(*) FROM video"</code></pre>
+
+<hr/>
+
+<h2>13. Key-Value Store (Add-ons)</h2>
+<p><strong>GET</strong> <code>/api/store.html</code></p>
+
+<p><strong>Actions</strong>:</p>
+
+<table>
+  <tr><th>Action</th><th>Required Parameters</th><th>Meaning</th></tr>
+  <tr><td>write</td><td>sec, key, value</td><td>Store value</td></tr>
+  <tr><td>read</td><td>sec, key</td><td>Retrieve value (plain text)</td></tr>
+  <tr><td>delete</td><td>sec, key (optional)</td><td>Delete key/section</td></tr>
+  <tr><td>updatefile</td><td>—</td><td>Flush to <code>config\AddOnStore.xml</code></td></tr>
+</table>
+
+<p><strong>Example</strong><br/>
+Write:</p>
+<pre><code>curl "http://192.168.1.2:8089/api/store.html?action=write&amp;sec=myAddon&amp;key=volume&amp;value=75"</code></pre>
+
+<hr/>
+
+<h2>14. Subtitle Delivery</h2>
+<p>Since 2.1.0 the servers deliver SRT files matching video URLs:</p>
+<p>Replace extension:</p>
+<pre><code>/upnp/video/388.mkv  →  /upnp/video/388.srt</code></pre>
+<ul>
+<li>Prefers exact filename match, else prefix match</li>
+<li>404 if no subtitle</li>
+</ul>
+
+<hr/>
+
+<h2>15. Deprecated and Obsolete API Calls</h2>
+
+<table>
+  <tr><th>Deprecated Call</th><th>Replacement</th><th>Notes</th></tr>
+  <tr><td><code>/api/status.html</code></td><td><code>/api/status2.html</code></td><td>All data moved to status2</td></tr>
+  <tr><td><code>/tasks.html?task=...</code></td><td><code>/api/tasks.html?task=...</code></td><td>Unified endpoint</td></tr>
+  <tr><td><code>/index.html?epg_clear=true</code></td><td><code>/api/epgclear.html?source=...</code></td><td>Full source control</td></tr>
+  <tr><td><code>/api/getchannelsdat.html</code></td><td><code>/api/getconfigfile.html</code> or <code>/api/getchannelsxml.html</code></td><td>—</td></tr>
+  <tr><td><code>/api/getdiseqcxml.html</code></td><td><code>/api/getconfigfile.html?file=DiSEqC.xml</code></td><td>—</td></tr>
+  <tr><td><code>/api/getfavourites.html</code></td><td><code>/api/getconfigfile.html</code> or <code>/api/getchannelsxml.html</code></td><td>—</td></tr>
+  <tr><td><code>/api/shutdown.html</code></td><td><code>/api/tasks.html?action=cancel</code> or <code>task=Shutdown</code></td><td>Merged into tasks</td></tr>
+</table>
+
+</div>
+</body>
+</html>
