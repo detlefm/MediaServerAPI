@@ -1,6 +1,6 @@
 # Projektkontext: MediaServer API Proxy
 
-Dieses Projekt implementiert einen Python FastAPI-Server, der als Proxy für die MediaServer API fungiert. Die Hauptaufgabe besteht darin, die in der Dokumentation beschriebenen API-Endpunkte zu implementieren und Anfragen an den eigentlichen MediaServer unter `http://winserver-2:8089` weiterzuleiten.
+Dieses Projekt implementiert einen Python FastAPI-Server, der als Proxy für die MediaServer API fungiert. Die Hauptaufgabe besteht darin, die in der Dokumentation beschriebenen API-Endpunkte zu implementieren und Anfragen an den eigentlichen MediaServer unter `http://localhost:8089` weiterzuleiten.
 Zum Testen und zur Dokumentation soll außerdem die unter `works/Endpoints.md` beschriebene API erweitert werden.
 
 ## API-Dokumentation
