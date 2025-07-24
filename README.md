@@ -1,3 +1,5 @@
+24.07.2025
+
 # MediaServerAPI
 MediaServer API documentation
 and proxy.py to add json support for MediaServer
@@ -92,8 +94,3 @@ http://<yourproxypc:Port>/api/apicall?Parameters,json=[0|1]
 
 ###
 
-
-
-
-
-21.07.2025
