@@ -2,13 +2,13 @@ import httpx
 from urllib.parse import urlencode
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware  # Neu: CORS-Middleware importieren
 from xml.dom.minidom import Element
 import xml.etree.ElementTree as ET
 from typing import Any
 from collections import defaultdict
 import click
 import uvicorn
-
 
 
 def xmltodict(xml: str | list[str]) -> dict[str, Any]:
@@ -98,13 +98,23 @@ async def proxy_request(request: Request, srv_url: str):
                 status_code=502
             )
 
-def create_app(srv_url: str) -> FastAPI:
-    """Erstellt die FastAPI-App mit konfigurierter SRV_URL"""
+
+def create_app(srv_url: str, enable_cors: bool = False) -> FastAPI:  # Neu: enable_cors Parameter
     app = FastAPI(
         title="MediaServerAPI Proxy",
         description="Ein validierender Proxy für die DVBViewer Media Server API.",
         version="0.3.0",
     )
+    
+    # Neu: CORS-Middleware bei Bedarf hinzufügen
+    if enable_cors:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],       # Erlaubt alle Ursprünge
+            allow_credentials=True,     # Erlaubt Cookies/Authentifizierung
+            allow_methods=["*"],       # Erlaubt alle HTTP-Methoden
+            allow_headers=["*"],       # Erlaubt alle HTTP-Header
+        )
     
     @app.api_route("/{path:path}", methods=["GET", "POST", "HEAD", "PUT", "DELETE", "PATCH"])
     async def catch_all_proxy(request: Request):
@@ -113,14 +123,18 @@ def create_app(srv_url: str) -> FastAPI:
     return app
 
 @click.command()
-@click.option('--srv-url', default='http://localhost:8089', help='URL des MediaServers')
+@click.option('--server', default='http://localhost:8089', help='URL des MediaServers')
 @click.option('--host', default='0.0.0.0', help='Host-Adresse des Proxys')
 @click.option('--port', default=8000, help='Port des Proxys', type=int)
-def run(srv_url: str, host: str, port: int):
+@click.option('--cors', is_flag=True, default=False, help='Aktiviert CORS für alle Ursprünge')  # Neu: CORS-Flag
+def run(server: str, host: str, port: int, cors: bool):  # Neu: cors Parameter
     """Startet den Proxy-Server mit konfigurierbaren Parametern"""
-    app = create_app(srv_url)
+    app = create_app(server, enable_cors=cors)  # Neu: CORS-Flag weitergeben
+    
     print(f"Starting proxy server on {host}:{port}")
-    print(f"Proxying requests to: {srv_url}")
+    print(f"Proxying requests to: {server}")
+    print(f"CORS {'enabled' if cors else 'disabled'}")  # Neu: CORS-Status anzeigen
+    
     uvicorn.run(app, host=host, port=port)
 
 if __name__ == "__main__":
