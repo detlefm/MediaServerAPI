@@ -98,7 +98,7 @@ http://<yourproxypc:Port>/api/apicall?Parameters&json=[0|1]
 
 # 🧭 `proxy.py` Overview
 
-This lightweight proxy server adds JSON support to the MediaServer API.  
+This lightweight proxy server adds JSON and CORS support to the MediaServer API.  
 Instead of calling the MediaServer directly:
 
 ```
@@ -108,10 +108,10 @@ http://<yourmediaserverpc:8089>/api/apicall?Parameters
 you can now use the proxy:
 
 ```
-http://<yourproxypc:Port>/api/apicall?Parameters&json=[0|1]
+http://<yourproxypc:Port>/api/apicall?Parameters&json=1
 ```
 
-- `json=0` → Response is standard XML  
+- `json=0` or omitted → Response is standard XML  
 - `json=1` → Response is returned in JSON format
 
 ---
