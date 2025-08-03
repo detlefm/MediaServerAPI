@@ -1,0 +1,42 @@
+Please create API documentation for the MediaServer (formerly Recording Service) in English (Markdown format), using the information from  the attachments with API Changes.
+
+The first (and oldest API Version) is: RecordindService.md, the others containing API Update
+
+
+Important instructions:
+
+The documentation must include every detail from the listed documents, without summarizing, omitting, or abstracting any information.
+
+Include all examples, notes, parameter types, possible variants, and remarks from the source documents.
+
+For each API call, include a section called "Changes", listing every version/date/release where the interface, accepted parameters (including type changes), or output has changed or been extended.
+
+For changes, always note exactly what changed (e.g., new parameters, allowed types, added fields, etc.).
+
+Ignore minor bug fixes unless they affected the interface itself.
+
+Document the API calls in the order of their first introduction, based on the date and version number.
+
+Pay attention to deprecations:
+
+Clearly mark deprecated functions in the main documentation.
+
+Additionally, create a separate section at the end with all deprecated or obsolete API calls and their details.
+
+For each API call, include:
+
+Description
+
+Endpoint and HTTP method
+
+All parameters (with data types, defaults, and details)
+
+All request and response examples (as shown in the documents)
+
+The "Changes" section
+
+Notes and remarks (especially about limitations, deprecation, and usage)
+
+Use clear and consistent Markdown formatting.
+
+The result must be in English and contain the full content from the documents, in as much detail as possible, for use by both developers and AI systems.
